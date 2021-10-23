@@ -18,6 +18,12 @@ func (s *TeamService) Create(m *model.Team) error {
 	return err
 }
 
+func (s *TeamService) GetAll() (*[]model.Team, error) {
+	m := new([]model.Team)
+	err := s.db.Find(&m).Error
+	return m, err
+}
+
 func (s *TeamService) GetById(id int64) (*model.Team, error) {
 	m := new(model.Team)
 	err := s.db.Where("id = ?", id).First(&m).Error

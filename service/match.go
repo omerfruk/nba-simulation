@@ -18,6 +18,12 @@ func (s *MatchService) Create(m *model.Match) error {
 	return err
 }
 
+func (s *MatchService) GetAll() (*[]model.Match, error) {
+	m := new([]model.Match)
+	err := s.db.Find(&m).Error
+	return m, err
+}
+
 func (s *MatchService) GetById(id int64) (*model.Match, error) {
 	m := new(model.Match)
 	err := s.db.Where("id = ?", id).First(&m).Error

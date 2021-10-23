@@ -18,6 +18,12 @@ func (s *PlayerService) Create(m *model.Player) error {
 	return err
 }
 
+func (s *PlayerService) GetAll() (*[]model.Player, error) {
+	m := new([]model.Player)
+	err := s.db.Find(&m).Error
+	return m, err
+}
+
 func (s *PlayerService) GetById(id int64) (*model.Player, error) {
 	m := new(model.Player)
 	err := s.db.Where("id = ?", id).First(&m).Error

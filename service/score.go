@@ -18,6 +18,12 @@ func (s *ScoreService) Create(m *model.Score) error {
 	return err
 }
 
+func (s *ScoreService) GetAll() (*[]model.Score, error) {
+	m := new([]model.Score)
+	err := s.db.Find(&m).Error
+	return m, err
+}
+
 func (s *ScoreService) GetById(id int64) (*model.Score, error) {
 	m := new(model.Score)
 	err := s.db.Where("id = ?", id).First(&m).Error
