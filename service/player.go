@@ -29,6 +29,11 @@ func (s *PlayerService) GetById(id int64) (*model.Player, error) {
 	err := s.db.Where("id = ?", id).First(&m).Error
 	return m, err
 }
+func (s *PlayerService) GetByMatchId(id int64) (*[]model.Player, error) {
+	m := new([]model.Player)
+	err := s.db.Where("team_id = ?", id).Find(&m).Error
+	return m, err
+}
 
 func (s *PlayerService) Update(m *model.Player) error {
 	err := s.db.Save(m).Error
