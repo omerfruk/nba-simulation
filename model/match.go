@@ -13,6 +13,7 @@ const (
 
 type Match struct {
 	gorm.Model
-	Team       []Team
-	TotalScore []Score
+	MatchType MatchType `json:"match_type"`
+	Teams     []*Team   `json:"teams" gorm:"many2many:match_teams;"`
+	Scores    []*Score  `json:"scores" gorm:"many2many:match_scores;"`
 }
