@@ -8,26 +8,27 @@ import (
 	"github.com/nba-simulation/service"
 	"github.com/nba-simulation/viewmodels"
 	"math/rand"
+	"sync"
 	"time"
-	//"github.com/nba-simulation/database"
-	//"github.com/nba-simulation/service"
 )
 
 func MatchStarting(c *fiber.Ctx) error {
+	//adding wait group
+	var wg sync.WaitGroup
+
 	var match []model.Match
 	doMatchTeam := TeamPrepare()
+
 	for _, vm := range doMatchTeam {
-		match = append(match, model.Match{
-			MatchType: model.MatchTypeNotStart,
-			Teams:     vm.Teams,
-			Scores:    nil,
-		})
+		wg.Add(1)
+		go func(vm viewmodels.DoMatchTeamVm, group sync.WaitGroup, matchType model.MatchType) {
+			temp := DoMatch(vm, &wg, matchType)
+			match = append(match, temp)
+		}(vm, wg, model.MatchtypeEnd)
 	}
+	wg.Wait()
 
-	temp := DoMatch(doMatchTeam[0])
-	fmt.Println(temp)
-
-	return c.Next()
+	return c.JSON(match)
 }
 
 func TeamPrepare() []viewmodels.DoMatchTeamVm {
@@ -89,7 +90,7 @@ func TakeShot() viewmodels.ShotVM {
 				OnShot:   true,
 				TimeOut:  false,
 			}
-			time.Sleep(time.Second * 5)
+			//time.Sleep(time.Second * 5)
 			return shot
 		}
 		shot = viewmodels.ShotVM{
@@ -97,7 +98,7 @@ func TakeShot() viewmodels.ShotVM {
 			OnShot:   true,
 			TimeOut:  false,
 		}
-		time.Sleep(time.Second * 3)
+		//time.Sleep(time.Second * 3)
 		return shot
 	}
 	number := rand.Intn(5-1) + 1
@@ -107,7 +108,7 @@ func TakeShot() viewmodels.ShotVM {
 			OnShot:   false,
 			TimeOut:  false,
 		}
-		time.Sleep(time.Second * 3)
+		//time.Sleep(time.Second * 3)
 		return shot
 	}
 	shot = viewmodels.ShotVM{
@@ -115,7 +116,7 @@ func TakeShot() viewmodels.ShotVM {
 		OnShot:   false,
 		TimeOut:  false,
 	}
-	time.Sleep(time.Second * 2)
+	// time.Sleep(time.Second * 2)
 	return shot
 }
 
@@ -162,8 +163,11 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 	return score
 }
 
-func DoMatch(matcher viewmodels.DoMatchTeamVm) model.Match {
+func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType model.MatchType) model.Match {
 	var match model.Match
+	match.MatchType = matchType
+	ss := service.NewScoreService(database.DB())
+	ms := service.NewMatchService(database.DB())
 	matcher.StartingTime = time.Now()
 	ps := service.NewPlayerService(database.DB())
 	team1 := matcher.Teams[0]
@@ -178,28 +182,36 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm) model.Match {
 		fmt.Println(err)
 	}
 
-	match.Teams = matcher.Teams
 	matcher.EndTime = time.Now().Add(time.Second * 240)
 	fmt.Println(time.Now())
 	fmt.Println(matcher.EndTime)
 	var scores []model.Score
 	for {
+		if len(scores)%13 == 0 {
+			ChangePlayer(*team1members)
+			ChangePlayer(*team2members)
+			//	time.Sleep(time.Second * 6)
+			fmt.Println("Change Player")
+		}
 		if time.Now().Before(matcher.EndTime) && len(scores) <= 48 {
 			scor := ShouterPlayer(*team1members)
 			for _, s := range scor {
 				scores = append(scores, model.Score{
 					ScoreType: s.ScoreType,
 					ScorerId:  s.ScorerId,
-					Match:     match,
+					TeamId:    team1.ID,
+					Team:      team1,
 					Scorer:    s.Scorer,
 				})
+
 			}
 			scor = ShouterPlayer(*team2members)
 			for _, s := range scor {
 				scores = append(scores, model.Score{
 					ScoreType: s.ScoreType,
 					ScorerId:  s.ScorerId,
-					Match:     match,
+					TeamId:    team2.ID,
+					Team:      team2,
 					Scorer:    s.Scorer,
 				})
 			}
@@ -207,6 +219,44 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm) model.Match {
 			break
 		}
 	}
+	// Score put in db
+	if err = ss.CreateAll(&scores); err != nil {
+		fmt.Println(err)
+	}
 	match.Scores = scores
+	match.Teams = matcher.Teams
+	if err = ms.Create(&match); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("wg bitti")
+	wg.Done()
 	return match
+}
+
+func ChangePlayer(players []model.Player) {
+	ps := service.NewPlayerService(database.DB())
+	var substitute model.Player
+	var player model.Player
+
+	for _, m := range players {
+		if substitute.ID == 0 && player.ID == 0 {
+			if m.PlayerType == model.PlayerTypePlayer {
+				player = m
+				player.PlayerType = model.PlayerTypeSubstitute
+			}
+			if m.PlayerType == model.PlayerTypeSubstitute {
+				substitute = m
+				substitute.PlayerType = model.PlayerTypePlayer
+			}
+		} else {
+			if err := ps.Update(&player); err != nil {
+				fmt.Println(err)
+			}
+			if err := ps.Update(&substitute); err != nil {
+				fmt.Println(err)
+			}
+			break
+		}
+	}
+
 }
