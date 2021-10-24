@@ -46,13 +46,13 @@ func MatchStarting(c *fiber.Ctx) error {
 				TeamName:      teamName,
 				PlayerScoreVM: player,
 			})
+			player = make([]viewmodels.PlayerScoreVM, 0)
 
 		}
 		retur = append(retur, viewmodels.ReturnVM{
 			MatchName:   teamsName,
 			TeamScoreVM: team,
 		})
-		player = make([]viewmodels.PlayerScoreVM, 0)
 		team = make([]viewmodels.TeamScoreVM, 0)
 	}
 	return c.JSON(retur)
@@ -172,7 +172,7 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 			break
 		}
 	}
-	// on shot no assister
+	// on shot no assister 3 point
 	if shot.OnShot {
 		score = append(score, viewmodels.ScoreVM{
 			ScoreType: shot.ShotType,
@@ -188,7 +188,7 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 		})
 		return score
 	}
-
+	// on shot no assister 2 point
 	score = append(score, viewmodels.ScoreVM{
 		ScoreType: shot.ShotType,
 		ScorerId:  int(player[playerNumber].ID),
@@ -213,12 +213,12 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 		ScoreType: model.ScoreTypeAssist,
 		ScorerId:  int(player[assistNumber].ID),
 		Scorer: viewmodels.PlayerVM{
-			Name:       player[playerNumber].Name,
-			Surname:    player[playerNumber].Surname,
-			Number:     player[playerNumber].Number,
-			TeamID:     player[playerNumber].TeamID,
-			Team:       player[playerNumber].Team,
-			PlayerType: player[playerNumber].PlayerType,
+			Name:       player[assistNumber].Name,
+			Surname:    player[assistNumber].Surname,
+			Number:     player[assistNumber].Number,
+			TeamID:     player[assistNumber].TeamID,
+			Team:       player[assistNumber].Team,
+			PlayerType: player[assistNumber].PlayerType,
 		},
 	})
 	return score
