@@ -20,7 +20,7 @@ func (s *TeamService) Create(m *model.Team) error {
 
 func (s *TeamService) GetAll() (*[]model.Team, error) {
 	m := new([]model.Team)
-	err := s.db.Find(&m).Error
+	err := s.db.Limit(6).Find(&m).Error
 	return m, err
 }
 

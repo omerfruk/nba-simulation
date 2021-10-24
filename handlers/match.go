@@ -16,15 +16,16 @@ func MatchStarting(c *fiber.Ctx) error {
 	//adding wait group
 	var wg sync.WaitGroup
 
-	var match []model.Match
+	match := make([]model.Match, 0)
 	doMatchTeam := TeamPrepare()
 
 	for _, vm := range doMatchTeam {
 		wg.Add(1)
-		go func(vm viewmodels.DoMatchTeamVm, group sync.WaitGroup, matchType model.MatchType) {
-			temp := DoMatch(vm, &wg, matchType)
+		go func(vm viewmodels.DoMatchTeamVm, group *sync.WaitGroup, matchType model.MatchType) {
+			temp := DoMatch(vm, matchType)
 			match = append(match, temp)
-		}(vm, wg, model.MatchtypeEnd)
+			wg.Done()
+		}(vm, &wg, model.MatchtypeEnd)
 	}
 	wg.Wait()
 
@@ -45,13 +46,15 @@ func MatchStarting(c *fiber.Ctx) error {
 				TeamName:      teamName,
 				PlayerScoreVM: player,
 			})
+
 		}
 		retur = append(retur, viewmodels.ReturnVM{
 			MatchName:   teamsName,
 			TeamScoreVM: team,
 		})
+		player = make([]viewmodels.PlayerScoreVM, 0)
+		team = make([]viewmodels.TeamScoreVM, 0)
 	}
-
 	return c.JSON(retur)
 }
 
@@ -163,7 +166,7 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 	//is player Substitute
 	var playerNumber int
 	for {
-		playerNumber = rand.Intn(8-0) + 0
+		playerNumber = rand.Intn(7-0) + 0
 		if player[playerNumber].PlayerType == model.PlayerTypePlayer {
 			break
 		}
@@ -200,7 +203,7 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 	//assister player
 	var assistNumber int
 	for {
-		assistNumber = rand.Intn(8-1) + 1
+		assistNumber = rand.Intn(7-0) + 0
 		if assistNumber != playerNumber && player[assistNumber].PlayerType == model.PlayerTypePlayer {
 			break
 		}
@@ -227,6 +230,7 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 	ms := service.NewMatchService(database.DB())
 	ps := service.NewPlayerService(database.DB())
 	matcher.StartingTime = time.Now()
+
 	team1 := matcher.Teams[0]
 	team2 := matcher.Teams[1]
 
@@ -244,12 +248,12 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 	fmt.Println(matcher.EndTime)
 	var scores []model.Score
 	for {
-		if len(scores)%13 == 0 {
+		/*if len(scores)%13 == 0 {
 			ChangePlayer(*team1members)
 			ChangePlayer(*team2members)
 			//	time.Sleep(time.Second * 6)
 			fmt.Println("Change Player")
-		}
+		}*/
 		if time.Now().Before(matcher.EndTime) && len(scores) <= 48 {
 			scor := ShouterPlayer(*team1members)
 			for _, s := range scor {
@@ -289,14 +293,15 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 		}
 	}
 	// Score put in db
-	if err = ss.CreateAll(&scores); err != nil {
+	/*if err = ss.CreateAll(&scores); err != nil {
 		fmt.Println(err)
-	}
-	match.Scores = scores
+	}*/
 	match.Teams = matcher.Teams
 	if err = ms.Create(&match); err != nil {
 		fmt.Println(err)
 	}
+	match.Scores = scores
+
 	fmt.Println("wg bitti")
 	wg.Done()
 	return match

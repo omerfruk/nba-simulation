@@ -93,7 +93,6 @@ func CreateRandomTeamAndMember() {
 			var teamId uint
 			teamId = uint((i / 8) + 1)
 			playerModel = append(playerModel, &model.Player{
-				Model:      gorm.Model{},
 				Name:       player.FirstName,
 				Surname:    player.LastName,
 				Number:     i + 1,

@@ -20,7 +20,7 @@ func (s *MatchService) Create(m *model.Match) error {
 
 func (s *MatchService) GetAll() (*[]model.Match, error) {
 	m := new([]model.Match)
-	err := s.db.Find(&m).Preload("Scores").Error
+	err := s.db.Limit(3).Find(&m).Error
 	return m, err
 }
 

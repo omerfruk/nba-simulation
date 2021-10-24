@@ -20,7 +20,7 @@ func (s *PlayerService) Create(m *model.Player) error {
 
 func (s *PlayerService) GetAll() (*[]model.Player, error) {
 	m := new([]model.Player)
-	err := s.db.Find(&m).Error
+	err := s.db.Limit(48).Find(&m).Error
 	return m, err
 }
 
@@ -31,7 +31,7 @@ func (s *PlayerService) GetById(id int64) (*model.Player, error) {
 }
 func (s *PlayerService) GetByMatchId(id int64) (*[]model.Player, error) {
 	m := new([]model.Player)
-	err := s.db.Where("team_id = ?", id).Find(&m).Error
+	err := s.db.Limit(8).Where("team_id = ?", id).Find(&m).Error
 	return m, err
 }
 
