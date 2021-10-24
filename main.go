@@ -23,8 +23,8 @@ func main() {
 	database.ConnectDB()
 
 	//DB AutoMigrate and CreateRandomTeamAndMember
-	//database.AutoMigrate()
-	//database.CreateRandomTeamAndMember()
+	database.AutoMigrate()
+	database.CreateRandomTeamAndMember()
 
 	routers.Router(app)
 	port := "3000"
