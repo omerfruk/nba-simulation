@@ -17,6 +17,10 @@ func (s *ScoreService) Create(m *model.Score) error {
 	err := s.db.Create(m).Error
 	return err
 }
+func (s *ScoreService) CreateAll(m *[]model.Score) error {
+	err := s.db.Create(m).Error
+	return err
+}
 
 func (s *ScoreService) GetAll() (*[]model.Score, error) {
 	m := new([]model.Score)
