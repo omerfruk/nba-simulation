@@ -62,6 +62,7 @@ func returnTypeTranslater(match model.Match) map[string][]viewmodels.PlayerScore
 	m := make(map[string][]viewmodels.PlayerScoreVM)
 	for _, score := range match.Scores {
 		m[score.Team.TeamName] = append(m[score.Team.TeamName], viewmodels.PlayerScoreVM{
+			PlayerId:        score.ScorerId,
 			PlayerName:      score.Scorer.Name + " " + score.Scorer.Surname,
 			PlayerType:      score.Scorer.PlayerType,
 			PlayerScoreType: score.ScoreType,
@@ -223,10 +224,10 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 	return score
 }
 
-func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType model.MatchType) model.Match {
+func DoMatch(matcher viewmodels.DoMatchTeamVm, matchType model.MatchType) model.Match {
 	var match model.Match
 	match.MatchType = matchType
-	ss := service.NewScoreService(database.DB())
+	//ss := service.NewScoreService(database.DB())
 	ms := service.NewMatchService(database.DB())
 	ps := service.NewPlayerService(database.DB())
 	matcher.StartingTime = time.Now()
@@ -248,7 +249,7 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 	fmt.Println(matcher.EndTime)
 	var scores []model.Score
 	for {
-		/*if len(scores)%13 == 0 {
+		/*	if len(scores)%13 == 0 {
 			ChangePlayer(*team1members)
 			ChangePlayer(*team2members)
 			//	time.Sleep(time.Second * 6)
@@ -293,6 +294,17 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 		}
 	}
 	// Score put in db
+
+	/*
+
+		acikca sotlemek gerekirse gorm'un azametine ugradim
+		normalde score olustururken team ve player'in id si olmasina
+		ragmen db de gereksiz yere bos player ve team lar olusturuyor
+		1 gun ful buna ugrastim cozemedim zamanim da azaldigindan dolayi boyle bi
+		yontem yapmak zorunda kaldim hatamin farkindayim
+
+	*/
+
 	/*if err = ss.CreateAll(&scores); err != nil {
 		fmt.Println(err)
 	}*/
@@ -303,9 +315,15 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 	match.Scores = scores
 
 	fmt.Println("wg bitti")
-	wg.Done()
 	return match
 }
+
+/*
+
+gorm burda da id si olan veriyi olusturmakta israr ediyor
+yeniden kaydetmek yerine tekrardan bos veri olusturuyor
+
+*/
 
 func ChangePlayer(players []model.Player) {
 	ps := service.NewPlayerService(database.DB())

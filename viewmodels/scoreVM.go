@@ -20,6 +20,7 @@ type TeamScoreVM struct {
 	PlayerScoreVM []PlayerScoreVM
 }
 type PlayerScoreVM struct {
+	PlayerId        int
 	PlayerName      string
 	PlayerType      model.PlayerType
 	PlayerScoreType model.ScoreType
