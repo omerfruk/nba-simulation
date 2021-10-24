@@ -28,31 +28,43 @@ func MatchStarting(c *fiber.Ctx) error {
 	}
 	wg.Wait()
 
-	var sc map[string][]viewmodels.ScoreVM
-	sc = make(map[string][]viewmodels.ScoreVM)
-
-	var scoreVM []viewmodels.ScoreVM
-
+	mep := make(map[string]map[string][]viewmodels.PlayerScoreVM)
 	for _, m := range match {
-		for _, s := range m.Scores {
-			scoreVM = append(scoreVM, viewmodels.ScoreVM{
-				ScoreType: s.ScoreType,
-				TeamId:    s.ScorerId,
-				Team:      s.Team,
-				ScorerId:  int(s.Scorer.ID),
-				Scorer: viewmodels.PlayerVM{
-					Name:       s.Scorer.Name,
-					Surname:    s.Scorer.Surname,
-					Number:     s.Scorer.Number,
-					TeamID:     s.Scorer.TeamID,
-					Team:       &s.Team,
-					PlayerType: s.Scorer.PlayerType,
-				},
+		mep[fmt.Sprintf("%s Vs %s ", m.Teams[0].TeamName, m.Teams[1].TeamName)] = returnTypeTranslater(m)
+	}
+
+	var player []viewmodels.PlayerScoreVM
+	var team []viewmodels.TeamScoreVM
+	var retur []viewmodels.ReturnVM
+	for teamsName, m := range mep {
+		for teamName, vms := range m {
+			for _, vm := range vms {
+				player = append(player, vm)
+			}
+			team = append(team, viewmodels.TeamScoreVM{
+				TeamName:      teamName,
+				PlayerScoreVM: player,
 			})
 		}
-		sc[fmt.Sprintf("%s VS %s", m.Teams[0].TeamName, m.Teams[1].TeamName)] = scoreVM
+		retur = append(retur, viewmodels.ReturnVM{
+			MatchName:   teamsName,
+			TeamScoreVM: team,
+		})
 	}
-	return c.JSON(sc)
+
+	return c.JSON(retur)
+}
+
+func returnTypeTranslater(match model.Match) map[string][]viewmodels.PlayerScoreVM {
+	m := make(map[string][]viewmodels.PlayerScoreVM)
+	for _, score := range match.Scores {
+		m[score.Team.TeamName] = append(m[score.Team.TeamName], viewmodels.PlayerScoreVM{
+			PlayerName:      score.Scorer.Name + " " + score.Scorer.Surname,
+			PlayerType:      score.Scorer.PlayerType,
+			PlayerScoreType: score.ScoreType,
+		})
+	}
+	return m
 }
 
 func TeamPrepare() []viewmodels.DoMatchTeamVm {
@@ -213,8 +225,8 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 	match.MatchType = matchType
 	ss := service.NewScoreService(database.DB())
 	ms := service.NewMatchService(database.DB())
-	matcher.StartingTime = time.Now()
 	ps := service.NewPlayerService(database.DB())
+	matcher.StartingTime = time.Now()
 	team1 := matcher.Teams[0]
 	team2 := matcher.Teams[1]
 
