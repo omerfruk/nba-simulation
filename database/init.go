@@ -68,7 +68,7 @@ func CreateRandomTeamAndMember() {
 	var jsonPlayers []playerJson
 	json.Unmarshal(byteValue, &jsonPlayers)
 
-	for i := 0; i < 8; i++ {
+	for i := 0; i < 6; i++ {
 		teams = append(teams, model.Team{
 			TeamName: fmt.Sprintf("Team %d", i+1),
 		})
