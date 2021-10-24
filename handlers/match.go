@@ -28,7 +28,31 @@ func MatchStarting(c *fiber.Ctx) error {
 	}
 	wg.Wait()
 
-	return c.JSON(match)
+	var sc map[string][]viewmodels.ScoreVM
+	sc = make(map[string][]viewmodels.ScoreVM)
+
+	var scoreVM []viewmodels.ScoreVM
+
+	for _, m := range match {
+		for _, s := range m.Scores {
+			scoreVM = append(scoreVM, viewmodels.ScoreVM{
+				ScoreType: s.ScoreType,
+				TeamId:    s.ScorerId,
+				Team:      s.Team,
+				ScorerId:  int(s.Scorer.ID),
+				Scorer: viewmodels.PlayerVM{
+					Name:       s.Scorer.Name,
+					Surname:    s.Scorer.Surname,
+					Number:     s.Scorer.Number,
+					TeamID:     s.Scorer.TeamID,
+					Team:       &s.Team,
+					PlayerType: s.Scorer.PlayerType,
+				},
+			})
+		}
+		sc[fmt.Sprintf("%s VS %s", m.Teams[0].TeamName, m.Teams[1].TeamName)] = scoreVM
+	}
+	return c.JSON(sc)
 }
 
 func TeamPrepare() []viewmodels.DoMatchTeamVm {
@@ -137,7 +161,14 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 		score = append(score, viewmodels.ScoreVM{
 			ScoreType: shot.ShotType,
 			ScorerId:  int(player[playerNumber].ID),
-			Scorer:    player[playerNumber],
+			Scorer: viewmodels.PlayerVM{
+				Name:       player[playerNumber].Name,
+				Surname:    player[playerNumber].Surname,
+				Number:     player[playerNumber].Number,
+				TeamID:     player[playerNumber].TeamID,
+				Team:       player[playerNumber].Team,
+				PlayerType: player[playerNumber].PlayerType,
+			},
 		})
 		return score
 	}
@@ -145,7 +176,14 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 	score = append(score, viewmodels.ScoreVM{
 		ScoreType: shot.ShotType,
 		ScorerId:  int(player[playerNumber].ID),
-		Scorer:    player[playerNumber],
+		Scorer: viewmodels.PlayerVM{
+			Name:       player[playerNumber].Name,
+			Surname:    player[playerNumber].Surname,
+			Number:     player[playerNumber].Number,
+			TeamID:     player[playerNumber].TeamID,
+			Team:       player[playerNumber].Team,
+			PlayerType: player[playerNumber].PlayerType,
+		},
 	})
 	//assister player
 	var assistNumber int
@@ -158,7 +196,14 @@ func ShouterPlayer(player []model.Player) []viewmodels.ScoreVM {
 	score = append(score, viewmodels.ScoreVM{
 		ScoreType: model.ScoreTypeAssist,
 		ScorerId:  int(player[assistNumber].ID),
-		Scorer:    player[assistNumber],
+		Scorer: viewmodels.PlayerVM{
+			Name:       player[playerNumber].Name,
+			Surname:    player[playerNumber].Surname,
+			Number:     player[playerNumber].Number,
+			TeamID:     player[playerNumber].TeamID,
+			Team:       player[playerNumber].Team,
+			PlayerType: player[playerNumber].PlayerType,
+		},
 	})
 	return score
 }
@@ -201,7 +246,13 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 					ScorerId:  s.ScorerId,
 					TeamId:    team1.ID,
 					Team:      team1,
-					Scorer:    s.Scorer,
+					Scorer: model.Player{
+						Name:       s.Scorer.Name,
+						Surname:    s.Scorer.Surname,
+						Number:     s.Scorer.Number,
+						Team:       &s.Team,
+						PlayerType: s.Scorer.PlayerType,
+					},
 				})
 
 			}
@@ -212,7 +263,13 @@ func DoMatch(matcher viewmodels.DoMatchTeamVm, wg *sync.WaitGroup, matchType mod
 					ScorerId:  s.ScorerId,
 					TeamId:    team2.ID,
 					Team:      team2,
-					Scorer:    s.Scorer,
+					Scorer: model.Player{
+						Name:       s.Scorer.Name,
+						Surname:    s.Scorer.Surname,
+						Number:     s.Scorer.Number,
+						Team:       &s.Team,
+						PlayerType: s.Scorer.PlayerType,
+					},
 				})
 			}
 		} else {
