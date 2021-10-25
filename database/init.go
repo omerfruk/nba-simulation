@@ -67,6 +67,7 @@ func CreateRandomTeamAndMember() {
 			fmt.Println(err)
 		}
 	}
+// Kaynakca https://github.com/bttmly/nba/blob/master/data/players.json
 	db.Find(&playerModel)
 	if len(playerModel) == 0 {
 		type playerJson struct {
