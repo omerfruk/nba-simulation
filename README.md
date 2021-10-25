@@ -34,3 +34,6 @@ Dizin olarak ./client'e gidiyoruz.
 <code>yarn install or npm install</code>  dedikten sonra
 
 <code>yarn serve or npm run serve</code> diyerek projemizin ayagı kalkmasini sagliyoruz
+
+
+similasyonun gerceklik payı olması icin methodlarda time.sleep bulunmaktadır zaman kaybini engellemk icin yorum satirina alinmistir
